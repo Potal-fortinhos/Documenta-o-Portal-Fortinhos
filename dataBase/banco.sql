@@ -322,4 +322,250 @@ ORDER BY data_login DESC;
     - Um usuário pode ter vários registros de login
     - Cada registro pertence a um único usuário
 
+
 */
+-- =============================================
+-- CRIAÇÃO DAS STORED PROCEDURES
+-- =============================================
+
+DELIMITER //
+
+-- Procedure para gerenciar Aluno (INSERT, UPDATE, DELETE)
+CREATE PROCEDURE sp_gerenciar_aluno(
+    IN p_acao ENUM('INSERT', 'UPDATE', 'DELETE'),
+    IN p_id_aluno INT,
+    IN p_nome VARCHAR(100),
+    IN p_cpf VARCHAR(14),
+    IN p_data_nascimento DATE,
+    IN p_email VARCHAR(100),
+    IN p_telefone VARCHAR(20),
+    IN p_endereco TEXT,
+    IN p_status ENUM('Ativo', 'Inativo', 'Trancado')
+)
+BEGIN
+    CASE p_acao
+        WHEN 'INSERT' THEN
+            INSERT INTO aluno (nome, cpf, data_nascimento, email, telefone, endereco, status)
+            VALUES (p_nome, p_cpf, p_data_nascimento, p_email, p_telefone, p_endereco, p_status);
+            
+        WHEN 'UPDATE' THEN
+            UPDATE aluno 
+            SET nome = IFNULL(p_nome, nome),
+                cpf = IFNULL(p_cpf, cpf),
+                data_nascimento = IFNULL(p_data_nascimento, data_nascimento),
+                email = IFNULL(p_email, email),
+                telefone = IFNULL(p_telefone, telefone),
+                endereco = IFNULL(p_endereco, endereco),
+                status = IFNULL(p_status, status)
+            WHERE id_aluno = p_id_aluno;
+            
+        WHEN 'DELETE' THEN
+            DELETE FROM aluno WHERE id_aluno = p_id_aluno;
+    END CASE;
+END //
+
+-- Procedure para gerenciar Professor
+CREATE PROCEDURE sp_gerenciar_professor(
+    IN p_acao ENUM('INSERT', 'UPDATE', 'DELETE'),
+    IN p_id_professor INT,
+    IN p_nome VARCHAR(100),
+    IN p_cpf VARCHAR(14),
+    IN p_data_nascimento DATE,
+    IN p_email VARCHAR(100),
+    IN p_telefone VARCHAR(20),
+    IN p_especialidade VARCHAR(100),
+    IN p_data_contratacao DATE,
+    IN p_status ENUM('Ativo', 'Inativo', 'Ferias')
+)
+BEGIN
+    CASE p_acao
+        WHEN 'INSERT' THEN
+            INSERT INTO professor (nome, cpf, data_nascimento, email, telefone, especialidade, data_contratacao, status)
+            VALUES (p_nome, p_cpf, p_data_nascimento, p_email, p_telefone, p_especialidade, p_data_contratacao, p_status);
+            
+        WHEN 'UPDATE' THEN
+            UPDATE professor 
+            SET nome = IFNULL(p_nome, nome),
+                cpf = IFNULL(p_cpf, cpf),
+                data_nascimento = IFNULL(p_data_nascimento, data_nascimento),
+                email = IFNULL(p_email, email),
+                telefone = IFNULL(p_telefone, telefone),
+                especialidade = IFNULL(p_especialidade, especialidade),
+                data_contratacao = IFNULL(p_data_contratacao, data_contratacao),
+                status = IFNULL(p_status, status)
+            WHERE id_professor = p_id_professor;
+            
+        WHEN 'DELETE' THEN
+            DELETE FROM professor WHERE id_professor = p_id_professor;
+    END CASE;
+END //
+
+-- Procedure para gerenciar Turma
+CREATE PROCEDURE sp_gerenciar_turma(
+    IN p_acao ENUM('INSERT', 'UPDATE', 'DELETE'),
+    IN p_id_turma INT,
+    IN p_nome_turma VARCHAR(50),
+    IN p_id_professor INT,
+    IN p_ano_letivo INT,
+    IN p_periodo ENUM('Manhã', 'Tarde', 'Noite'),
+    IN p_capacidade_max INT,
+    IN p_data_inicio DATE,
+    IN p_data_fim DATE,
+    IN p_status ENUM('Ativa', 'Concluída', 'Cancelada')
+)
+BEGIN
+    CASE p_acao
+        WHEN 'INSERT' THEN
+            INSERT INTO turma (nome_turma, id_professor, ano_letivo, periodo, capacidade_max, data_inicio, data_fim, status)
+            VALUES (p_nome_turma, p_id_professor, p_ano_letivo, p_periodo, p_capacidade_max, p_data_inicio, p_data_fim, p_status);
+            
+        WHEN 'UPDATE' THEN
+            UPDATE turma 
+            SET nome_turma = IFNULL(p_nome_turma, nome_turma),
+                id_professor = IFNULL(p_id_professor, id_professor),
+                ano_letivo = IFNULL(p_ano_letivo, ano_letivo),
+                periodo = IFNULL(p_periodo, periodo),
+                capacidade_max = IFNULL(p_capacidade_max, capacidade_max),
+                data_inicio = IFNULL(p_data_inicio, data_inicio),
+                data_fim = IFNULL(p_data_fim, data_fim),
+                status = IFNULL(p_status, status)
+            WHERE id_turma = p_id_turma;
+            
+        WHEN 'DELETE' THEN
+            DELETE FROM turma WHERE id_turma = p_id_turma;
+    END CASE;
+END //
+
+-- Procedure para gerenciar Nota com log automático
+CREATE PROCEDURE sp_gerenciar_nota(
+    IN p_acao ENUM('INSERT', 'UPDATE', 'DELETE'),
+    IN p_id_nota INT,
+    IN p_id_aluno INT,
+    IN p_id_turma INT,
+    IN p_tipo_avaliacao VARCHAR(50),
+    IN p_nota DECIMAL(4,2),
+    IN p_bimestre INT,
+    IN p_observacao TEXT,
+    IN p_usuario VARCHAR(100)
+)
+BEGIN
+    DECLARE v_nota_anterior DECIMAL(4,2);
+    
+    CASE p_acao
+        WHEN 'INSERT' THEN
+            INSERT INTO nota (id_aluno, id_turma, tipo_avaliacao, nota, bimestre, observacao)
+            VALUES (p_id_aluno, p_id_turma, p_tipo_avaliacao, p_nota, p_bimestre, p_observacao);
+            
+            -- Registrar log
+            INSERT INTO log_alteracao_nota (id_nota, id_aluno, id_turma, nota_nova, tipo_avaliacao, usuario_responsavel, acao)
+            VALUES (LAST_INSERT_ID(), p_id_aluno, p_id_turma, p_nota, p_tipo_avaliacao, p_usuario, 'INSERT');
+            
+        WHEN 'UPDATE' THEN
+            -- Obter nota anterior
+            SELECT nota INTO v_nota_anterior FROM nota WHERE id_nota = p_id_nota;
+            
+            UPDATE nota 
+            SET id_aluno = IFNULL(p_id_aluno, id_aluno),
+                id_turma = IFNULL(p_id_turma, id_turma),
+                tipo_avaliacao = IFNULL(p_tipo_avaliacao, tipo_avaliacao),
+                nota = IFNULL(p_nota, nota),
+                bimestre = IFNULL(p_bimestre, bimestre),
+                observacao = IFNULL(p_observacao, observacao)
+            WHERE id_nota = p_id_nota;
+            
+            -- Registrar log
+            INSERT INTO log_alteracao_nota (id_nota, id_aluno, id_turma, nota_anterior, nota_nova, tipo_avaliacao, usuario_responsavel, acao)
+            VALUES (p_id_nota, p_id_aluno, p_id_turma, v_nota_anterior, p_nota, p_tipo_avaliacao, p_usuario, 'UPDATE');
+            
+        WHEN 'DELETE' THEN
+            -- Registrar log antes de deletar
+            SELECT nota, id_aluno, id_turma, tipo_avaliacao 
+            INTO v_nota_anterior, p_id_aluno, p_id_turma, p_tipo_avaliacao 
+            FROM nota WHERE id_nota = p_id_nota;
+            
+            INSERT INTO log_alteracao_nota (id_nota, id_aluno, id_turma, nota_anterior, tipo_avaliacao, usuario_responsavel, acao)
+            VALUES (p_id_nota, p_id_aluno, p_id_turma, v_nota_anterior, p_tipo_avaliacao, p_usuario, 'DELETE');
+            
+            DELETE FROM nota WHERE id_nota = p_id_nota;
+    END CASE;
+END //
+
+-- Procedure para gerenciar Calendario Eventos
+CREATE PROCEDURE sp_gerenciar_calendario(
+    IN p_acao ENUM('INSERT', 'UPDATE', 'DELETE'),
+    IN p_id_evento INT,
+    IN p_titulo VARCHAR(200),
+    IN p_descricao TEXT,
+    IN p_tipo_evento ENUM('Feriado', 'Prova', 'Reunião', 'Evento', 'Férias', 'Outro'),
+    IN p_data_inicio DATETIME,
+    IN p_data_fim DATETIME,
+    IN p_local_evento VARCHAR(200),
+    IN p_id_turma INT,
+    IN p_publico_alvo ENUM('Todos', 'Alunos', 'Professores', 'TurmaEspecifica')
+)
+BEGIN
+    CASE p_acao
+        WHEN 'INSERT' THEN
+            INSERT INTO calendario_eventos (titulo, descricao, tipo_evento, data_inicio, data_fim, local_evento, id_turma, publico_alvo)
+            VALUES (p_titulo, p_descricao, p_tipo_evento, p_data_inicio, p_data_fim, p_local_evento, p_id_turma, p_publico_alvo);
+            
+        WHEN 'UPDATE' THEN
+            UPDATE calendario_eventos 
+            SET titulo = IFNULL(p_titulo, titulo),
+                descricao = IFNULL(p_descricao, descricao),
+                tipo_evento = IFNULL(p_tipo_evento, tipo_evento),
+                data_inicio = IFNULL(p_data_inicio, data_inicio),
+                data_fim = IFNULL(p_data_fim, data_fim),
+                local_evento = IFNULL(p_local_evento, local_evento),
+                id_turma = IFNULL(p_id_turma, id_turma),
+                publico_alvo = IFNULL(p_publico_alvo, publico_alvo)
+            WHERE id_evento = p_id_evento;
+            
+        WHEN 'DELETE' THEN
+            DELETE FROM calendario_eventos WHERE id_evento = p_id_evento;
+    END CASE;
+END //
+
+-- Procedure para consultar calendário por período
+CREATE PROCEDURE sp_consultar_calendario(
+    IN p_data_inicio DATE,
+    IN p_data_fim DATE,
+    IN p_tipo_evento VARCHAR(50)
+)
+BEGIN
+    SELECT * FROM calendario_eventos 
+    WHERE DATE(data_inicio) BETWEEN p_data_inicio AND p_data_fim
+    AND (p_tipo_evento IS NULL OR tipo_evento = p_tipo_evento)
+    ORDER BY data_inicio;
+END //
+
+DELIMITER ;
+
+-- =============================================
+-- EXEMPLOS DE USO DAS PROCEDURES
+-- =============================================
+
+-- Inserir um aluno
+CALL sp_gerenciar_aluno('INSERT', NULL, 'João Silva', '123.456.789-00', '2000-01-15', 
+                        'joao@email.com', '(11) 99999-9999', 'Rua A, 123', 'Ativo');
+
+-- Inserir um professor
+CALL sp_gerenciar_professor('INSERT', NULL, 'Maria Oliveira', '987.654.321-00', '1980-05-20',
+                           'maria@email.com', '(11) 88888-8888', 'Matemática', '2020-02-01', 'Ativo');
+
+-- Inserir uma turma
+CALL sp_gerenciar_turma('INSERT', NULL, 'Turma A - Matemática', 1, 2024, 'Manhã', 
+                        30, '2024-02-01', '2024-12-15', 'Ativa');
+
+-- Inserir uma nota (com log automático)
+CALL sp_gerenciar_nota('INSERT', NULL, 1, 1, 'Prova Bimestral', 8.5, 1, 
+                       'Primeira avaliação', 'Sistema');
+
+-- Inserir evento no calendário
+CALL sp_gerenciar_calendario('INSERT', NULL, 'Prova de Matemática', 
+                            'Avaliação bimestral da turma A', 'Prova', 
+                            '2024-03-15 08:00:00', '2024-03-15 10:00:00', 
+                            'Sala 101', 1, 'TurmaEspecifica');
+
+-- Consultar eventos do calendário
+CALL sp_consultar_calendario('2024-03-01', '2024-03-31', 'Prova');
