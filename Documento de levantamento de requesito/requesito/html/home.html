@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDR · Portal do Aluno (versão 1.0)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- CAPA DO DOCUMENTO (Página 1 do PDF remodelada) -->
+    <header class="document-header">
+        <div class="institution">
+            <h1>CENTRO EDUCACIONAL FUCAPI</h1>
+            <p>Curso de Informática · Coordenação de curso técnico</p>
+        </div>
+        <div class="project-id">
+            <h2> · Portal Aluno</h2>
+            <p class="doc-type">Documento Levantamento de Requisitos</p>
+            <span class="version">Versão 1.0</span>
+        </div>
+        <div class="hero-icon"></div>
+    </header>
+
+    <!-- SUMÁRIO (página 3 adaptada) -->
+    <section class="summary">
+        <h3>Sumário</h3>
+        <ul>
+            <li>1. Introdução ................................................... 01</li>
+            <li>2. Visão geral desse documento ........................... 01</li>
+            <li>3. Convenções, termos e abreviações ................... 01</li>
+            <li>4. Identificações dos requisitos .......................... 01</li>
+            <li>5. Prioridade dos requisitos .............................. 01</li>
+            <li>6. Referências ................................................... 01</li>
+            <li>7. Descrição geral do sistema (PORTAL) .............. 01</li>
+            <li>8. Descrição dos usuários .................................. 01</li>
+            <li>9. Requisitos funcionais .................................... 01</li>
+            <li>10. Requisitos não funcionais ............................ 01</li>
+            <li>11. Aprovação ................................................... 01</li>
+        </ul>
+        <div class="project-footer">Nome do projeto · Portal do Aluno/FUCAPI · Página 3/5</div>
+    </section>
+
+    <!-- CORPO PRINCIPAL – itens preenchidos conforme modelo -->
+    <main class="requisitos-container">
+        
+        <!-- 1. INTRODUÇÃO -->
+        <section class="requisito-card">
+            <h4>1. Introdução</h4>
+            <div class="conteudo">
+                <p>O presente portal acadêmico foi idealizado a partir da necessidade de unificar consulta de notas, rematrículas e calendário escolar em um único ambiente digital. A equipe EduTech, composta por estudantes do curso técnico, realizou entrevistas com coordenadores, professores e alunos. Os resultados apontaram a urgência de um sistema transparente, acessível e responsivo. Este documento consolida todos os requisitos levantados até a sprint 2.</p>
+                <div class="img-repr grafico-notas"></div>
+            </div>
+        </section>
+
+        <!-- 2. VISÃO GERAL DESTE DOCUMENTO -->
+        <section class="requisito-card">
+            <h4>2. Visão geral desse documento</h4>
+            <p>A documentação segue a abordagem de requisitos ágeis, dividida em visão de atores (aluno, professor, secretaria). Cada requisito funcional será rastreado por ID único e prioridade. Setores envolvidos: TI, secretaria acadêmica, financeiro (rematrícula) e corpo docente.</p>
+        </section>
+
+        <!-- 3. CONVENÇÕES, TERMOS E ABREVIAÇÕES -->
+        <section class="requisito-card">
+            <h4>3. Convenções, termos e abreviações</h4>
+            <ul>
+                <li><span class="termo">RF</span> – Requisito Funcional</li>
+                <li><span class="termo">NF</span> – Requisito Não Funcional</li>
+                <li><span class="termo">RA</span> – Registro Acadêmico (matrícula)</li>
+                <li><span class="termo">PDA</span> – Portal do Aluno</li>
+                <li><span class="termo">MEC</span> – padrões de calendário acadêmico</li>
+            </ul>
+        </section>
+
+        <!-- 4. IDENTIFICAÇÕES DOS REQUISITOS -->
+        <section class="requisito-card">
+            <h4>4. Identificações dos requisitos</h4>
+            <p>Os requisitos são categorizados como <strong>funcionais (RF)</strong> ou <strong>não funcionais (NF)</strong>. Cada um recebe um número sequencial e uma tag de prioridade (Alta, Média, Baixa). Para o portal, utilizamos o padrão [RFxxx] e [NFxxx].</p>
+            <div class="img-repr identificacao-icon"></div>
+        </section>
+
+        <!-- 5. PRIORIDADE DOS REQUISITOS -->
+        <section class="requisito-card">
+            <h4>5. Prioridade dos requisitos</h4>
+            <p><span class="tag alta">Alta</span> – essencial para o MVP (ex: visualização de notas, login). <span class="tag media">Média</span> – desejável em até 2 sprints (ex: recuperação de senha). <span class="tag baixa">Baixa</span> – melhorias futuras (ex: temas personalizados).</p>
+        </section>
+
+        <!-- 6. REFERÊNCIAS -->
+        <section class="requisito-card">
+            <h4>6. Referências</h4>
+            <p>Ata de reunião 23/08/2025 – coordenação; protótipo Figma “Portal FUCAPI v1”; entrevistas com 20 alunos e 5 professores; resolução CNE/CP 003/2024.</p>
+        </section>
+
+        <!-- 7. DESCRIÇÃO GERAL DO SISTEMA (PORTAL DO ALUNO) -->
+        <section class="requisito-card destaque-sistema">
+            <h4>7. Descrição geral do sistema</h4>
+            <p>O <strong>Portal do Aluno FUCAPI</strong> é uma aplicação web responsiva que permite aos alunos consultar histórico de notas, frequência, solicitar rematrícula e visualizar calendário acadêmico. Professores possuem acesso restrito para lançar e alterar notas (com permissão de coordenador). Tecnologias: front-end em HTML5, CSS3, JavaScript; back-end em Node.js (mockado nesta etapa); banco de dados PostgreSQL.</p>
+            <div class="img-row">
+                <div class="img-placeholder icone-calendario"></div>
+                <div class="img-placeholder icone-notas"></div>
+                <div class="img-placeholder icone-rematricula"></div>
+            </div>
+        </section>
+
+        <!-- 8. DESCRIÇÃO DOS USUÁRIOS -->
+        <section class="requisito-card usuarios">
+            <h4>8. Descrição dos usuários</h4>
+            <div class="usuario-grupo">
+                <div class="usuario">
+                    <h5>a) Usuário A – Aluno</h5>
+                    <p>Graduando do curso técnico, acesso via RA e senha. Visualiza notas, boletim, calendário de provas, solicita rematrícula e atualiza dados cadastrais. Cerca de 800 usuários ativos.</p>
+                    <span class="icone-perfil aluno-icone"></span>
+                </div>
+                <div class="usuario">
+                    <h5>b) Usuário B – Professor</h5>
+                    <p>Docente com vínculo. Acesso para inserir/alterar notas de suas turmas, consultar pautas, justificar faltas. Não pode excluir notas, apenas editar com registro de data/hora.</p>
+                    <span class="icone-perfil professor-icone"></span>
+                </div>
+                <div class="usuario">
+                    <h5>c) Usuário C – Secretaria/Coordenação</h5>
+                    <p>Responsável por liberar rematrículas, gerenciar calendário e aprovar alterações de notas críticas.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. REQUISITOS FUNCIONAIS -->
+        <section class="requisito-card">
+            <h4>9. Requisitos funcionais</h4>
+            <div class="funcional-lista">
+                <div class="rf-item">
+                    <span class="rf-tag">[RF001]</span>
+                    <strong>Funcionalidade de login:</strong> usuário (aluno/professor) insere RA e senha. Validação com ldap mockado. Prioridade <span class="tag alta">Alta</span>. Atores: aluno, professor.
+                </div>
+                <div class="rf-item">
+                    <span class="rf-tag">[RF002]</span>
+                    <strong>Recuperação de acesso:</strong> envio de link de redefinição via e-mail cadastrado. Prioridade <span class="tag media">Média</span>.
+                </div>
+                <div class="rf-item">
+                    <span class="rf-tag">[RF003]</span>
+                    <strong>Visualização de notas escolares:</strong> tabela por disciplina, bimestre, com médias e situação (aprovado/recuperação). <span class="tag alta">Alta</span> – Aluno.
+                </div>
+                <div class="rf-item">
+                    <span class="rf-tag">[RF004]</span>
+                    <strong>Lançamento/edição de notas (professor):</strong> professor seleciona turma, disciplina, lança nota de 0 a 10. Alterações são registradas em log. <span class="tag alta">Alta</span> – Professor.
+                </div>
+                <div class="rf-item">
+                    <span class="rf-tag">[RF005]</span>
+                    <strong>Solicitação de rematrícula:</strong> aluno manifesta interesse em novo semestre, sistema gera boleto (simulado) e vincula disciplina. <span class="tag alta">Alta</span>.
+                </div>
+                <div class="rf-item">
+                    <span class="rf-tag">[RF006]</span>
+                    <strong>Calendário escolar:</strong> exibe feriados, datas de provas, início e fim de semestre. Visualização mensal. <span class="tag media">Média</span>.
+                </div>
+            </div>
+            <div class="tabela-notas-wrapper">
+                <h5>Exemplo de visualização (aluno) – notas 1º bim/2025</h5>
+                <table class="tabela-notas">
+                    <thead>
+                        <tr><th>Disciplina</th><th>Nota 1</th><th>Nota 2</th><th>Média</th><th>Situação</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Lógica</td><td>8.5</td><td>9.0</td><td>8.75</td><td class="aprovado">Aprovado</td></tr>
+                        <tr><td>Banco de Dados</td><td>7.0</td><td>6.5</td><td>6.75</td><td class="aprovado">Aprovado</td></tr>
+                        <tr><td>Programação Web</td><td>5.5</td><td>6.0</td><td>5.75</td><td class="recuperacao">Recuperação</td></tr>
+                        <tr><td>Design UI</td><td>9.0</td><td>8.5</td><td>8.75</td><td class="aprovado">Aprovado</td></tr>
+                    </tbody>
+                </table>
+                <div class="img-notas-icon"></div>
+            </div>
+        </section>
+
+        <!-- 10. REQUISITOS NÃO FUNCIONAIS -->
+        <section class="requisito-card">
+            <h4>10. Requisitos não funcionais</h4>
+            <p><span class="termo-alto">Termo A – Segurança e Escalabilidade</span></p>
+            <ul class="nf-lista">
+                <li><span class="nf-tag">[NF001]</span> Requisito não funcional 01: Autenticação via JWT com expiração de sessão (30 min). Prioridade <span class="tag alta">Alta</span>.</li>
+                <li><span class="nf-tag">[NF002]</span> Requisito não funcional 02: Criptografia de dados sensíveis (notas, dados pessoais) em repouso. <span class="tag alta">Alta</span>.</li>
+            </ul>
+            <p><span class="termo-alto">Termo B – Desempenho e disponibilidade</span></p>
+            <ul class="nf-lista">
+                <li><span class="nf-tag">[NF003]</span> Requisito não funcional 03: O sistema deve suportar 500 requisições simultâneas com tempo de resposta inferior a 2s. <span class="tag media">Média</span>.</li>
+                <li><span class="nf-tag">[NF004]</span> Requisito não funcional 04: Responsividade (mobile, tablet, desktop) – seguir padrão WCAG 2.1 AA.</li>
+            </ul>
+        </section>
+
+        <!-- 11. APROVAÇÃO -->
+        <section class="requisito-card aprovacao">
+            <h4>11. Aprovação</h4>
+            <table class="tabela-aprovacao">
+                <thead>
+                    <tr><th colspan="3">Aprovações · Equipe EduTech</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Integrante</strong></td><td><strong>Assinatura</strong></td><td><strong>Data</strong></td></tr>
+                    <tr><td>Ana Souza (PO)</td><td><span class="ass-digital">Ana S. (assinado)</span></td><td>12/02/2026</td></tr>
+                    <tr><td>João Lima (dev)</td><td><span class="ass-digital">João L. (assinado)</span></td><td>12/02/2026</td></tr>
+                    <tr><td>Maria C. (docente)</td><td><span class="ass-digital">M. Costa (assinado)</span></td><td>13/02/2026</td></tr>
+                    <tr><td>Coord. Técnico</td><td>—</td><td>__/__/____</td></tr>
+                </tbody>
+            </table>
+            <div class="img-aprovado-stamp"></div>
+        </section>
+
+        <div class="doc-footer">Portal do Aluno – FUCAPI • PDR v1.0 • Página 5/5</div>
+    </main>
+</body>
+</html>
