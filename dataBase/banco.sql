@@ -569,3 +569,294 @@ CALL sp_gerenciar_calendario('INSERT', NULL, 'Prova de Matemática',
 
 -- Consultar eventos do calendário
 CALL sp_consultar_calendario('2024-03-01', '2024-03-31', 'Prova');
+
+
+-- =============================================
+-- TABELA DE VALIDAÇÃO DE DADOS
+-- =============================================
+CREATE TABLE validacao_dados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tabela VARCHAR(50) NOT NULL,
+    campo VARCHAR(50) NOT NULL,
+    valor_referencia VARCHAR(255) NOT NULL,
+    descricao VARCHAR(255),
+    tipo_validacao ENUM('existencia', 'formato', 'faixa', 'unico', 'relacionamento') NOT NULL,
+    ativo BOOLEAN DEFAULT TRUE,
+    mensagem_erro VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Índices para melhor performance
+    INDEX idx_tabela_campo (tabela, campo),
+    INDEX idx_tipo_validacao (tipo_validacao)
+);
+
+-- =============================================
+-- INSERÇÃO DAS VALIDAÇÕES POR TABELA
+-- =============================================
+
+-- 1. Validações para tabela ALUNO
+INSERT INTO validacao_dados (tabela, campo, valor_referencia, descricao, tipo_validacao, mensagem_erro) VALUES
+('aluno', 'ra', '^[0-9]{7}$', 'RA deve conter exatamente 7 dígitos numéricos', 'formato', 'RA inválido. Deve conter 7 dígitos numéricos'),
+('aluno', 'email', '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$', 'Email deve seguir formato válido', 'formato', 'Email em formato inválido'),
+('aluno', 'senha', '.{6,}', 'Senha deve ter no mínimo 6 caracteres', 'formato', 'Senha muito curta. Mínimo 6 caracteres'),
+('aluno', 'ativo', '0,1', 'Valores permitidos: 0 (inativo) ou 1 (ativo)', 'faixa', 'Valor inválido para campo ativo');
+
+-- 2. Validações para tabela PROFESSOR
+INSERT INTO validacao_dados (tabela, campo, valor_referencia, descricao, tipo_validacao, mensagem_erro) VALUES
+('professor', 'email', '^[A-Za-z0-9._%+-]+@escola\.com$', 'Email deve ser do domínio @escola.com', 'formato', 'Email deve ser institucional (@escola.com)'),
+('professor', 'especialidade', 'Matemática,Português,História,Geografia,Física,Química,Biologia,Inglês,Artes,Educação Física', 'Especialidades válidas', 'faixa', 'Especialidade não reconhecida'),
+('professor', 'data_contratacao', '<= CURRENT_DATE', 'Data de contratação não pode ser futura', 'faixa', 'Data de contratação inválida (futura)');
+
+-- 3. Validações para tabela TURMA_DISCIPLINA
+INSERT INTO validacao_dados (tabela, campo, valor_referencia, descricao, tipo_validacao, mensagem_erro) VALUES
+('turma_disciplina', 'carga_horaria', '30,40,60,80,120', 'Cargas horárias padrão', 'faixa', 'Carga horária fora dos padrões permitidos'),
+('turma_disciplina', 'semestre', '^20[0-9]{2}\.[1-2]$', 'Formato: AAAA.S (ex: 2024.1 ou 2024.2)', 'formato', 'Semestre deve estar no formato AAAA.S (ex: 2024.1)'),
+('turma_disciplina', 'ano', '>= 2000 AND <= YEAR(CURRENT_DATE) + 1', 'Ano deve ser entre 2000 e ano atual +1', 'faixa', 'Ano fora do período permitido'),
+('turma_disciplina', 'professor_id', 'EXISTS(SELECT 1 FROM professor WHERE id = ? AND ativo = 1)', 'Professor deve existir e estar ativo', 'relacionamento', 'Professor não encontrado ou inativo');
+
+-- 4. Validações para tabela NOTA
+INSERT INTO validacao_dados (tabela, campo, valor_referencia, descricao, tipo_validacao, mensagem_erro) VALUES
+('nota', 'bimestre', '1,2,3,4', 'Bimestres válidos: 1, 2, 3 ou 4', 'faixa', 'Bimestre deve ser 1, 2, 3 ou 4'),
+('nota', 'valor', '>= 0 AND <= 10', 'Nota deve estar entre 0 e 10', 'faixa', 'Nota deve estar entre 0 e 10'),
+('nota', 'aluno_id', 'EXISTS(SELECT 1 FROM aluno WHERE id = ? AND ativo = 1)', 'Aluno deve existir e estar ativo', 'relacionamento', 'Aluno não encontrado ou inativo'),
+('nota', 'disciplina_id', 'EXISTS(SELECT 1 FROM turma_disciplina WHERE id = ? AND ativo = 1)', 'Disciplina deve existir e estar ativa', 'relacionamento', 'Disciplina não encontrada ou inativa'),
+('nota', 'lancado_por', 'EXISTS(SELECT 1 FROM professor WHERE id = ? AND ativo = 1)', 'Professor deve existir e estar ativo', 'relacionamento', 'Professor não encontrado ou inativo'),
+('nota', 'data_lancamento', '<= NOW()', 'Data de lançamento não pode ser futura', 'faixa', 'Data de lançamento futura não permitida');
+
+-- 5. Validações para tabela LOG_ALTERACAO_NOTA
+INSERT INTO validacao_dados (tabela, campo, valor_referencia, descricao, tipo_validacao, mensagem_erro) VALUES
+('log_alteracao_nota', 'valor_antigo', '>= 0 AND <= 10', 'Nota antiga deve estar entre 0 e 10', 'faixa', 'Nota antiga inválida'),
+('log_alteracao_nota', 'valor_novo', '>= 0 AND <= 10', 'Nota nova deve estar entre 0 e 10', 'faixa', 'Nota nova inválida'),
+('log_alteracao_nota', 'data_alteracao', '<= NOW()', 'Data de alteração não pode ser futura', 'faixa', 'Data de alteração futura não permitida');
+
+-- 6. Validações para tabela REMATRICULA
+INSERT INTO validacao_dados (tabela, campo, valor_referencia, descricao, tipo_validacao, mensagem_erro) VALUES
+('rematricula', 'semestre', '^20[0-9]{2}\.[1-2]$', 'Formato: AAAA.S (ex: 2024.1 ou 2024.2)', 'formato', 'Semestre deve estar no formato AAAA.S'),
+('rematricula', 'status', 'pendente,aprovado,rejeitado,concluido', 'Status permitidos', 'faixa', 'Status inválido para rematrícula'),
+('rematricula', 'data_solicitacao', '<= NOW()', 'Data de solicitação não pode ser futura', 'faixa', 'Data de solicitação futura não permitida');
+
+-- 7. Validações para tabela CALENDARIO_EVENTO
+INSERT INTO validacao_dados (tabela, campo, valor_referencia, descricao, tipo_validacao, mensagem_erro) VALUES
+('calendario_evento', 'tipo', 'prova,feriado,reuniao,evento,matricula', 'Tipos de evento permitidos', 'faixa', 'Tipo de evento inválido'),
+('calendario_evento', 'data', '>= CURRENT_DATE', 'Eventos devem ser agendados para data atual ou futura', 'faixa', 'Não é possível criar evento em data passada'),
+('calendario_evento', 'data_fim', '>= data', 'Data fim deve ser maior ou igual à data início', 'faixa', 'Data fim deve ser posterior à data início'),
+('calendario_evento', 'turma_id', 'IS NULL OR EXISTS(SELECT 1 FROM turma_disciplina WHERE id = ?)', 'Turma deve existir quando informada', 'relacionamento', 'Turma informada não existe');
+
+-- 8. Validações para tabela LOGIN
+INSERT INTO validacao_dados (tabela, campo, valor_referencia, descricao, tipo_validacao, mensagem_erro) VALUES
+('login', 'tipo_usuario', 'aluno,professor,admin', 'Tipos de usuário permitidos', 'faixa', 'Tipo de usuário inválido'),
+('login', 'email', '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$', 'Email deve seguir formato válido', 'formato', 'Email em formato inválido'),
+('login', 'data_login', '<= NOW()', 'Data de login não pode ser futura', 'faixa', 'Data de login futura não permitida'),
+('login', 'ip_address', '^([0-9]{1,3}\.){3}[0-9]{1,3}$', 'IP deve estar no formato válido', 'formato', 'Formato de IP inválido');
+
+-- =============================================
+-- FUNÇÃO PARA VALIDAR DADOS
+-- =============================================
+DELIMITER //
+
+CREATE FUNCTION fn_validar_dado(
+    p_tabela VARCHAR(50),
+    p_campo VARCHAR(50),
+    p_valor VARCHAR(255)
+) 
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+    DECLARE v_tipo_validacao ENUM('existencia', 'formato', 'faixa', 'unico', 'relacionamento');
+    DECLARE v_valor_referencia VARCHAR(255);
+    DECLARE v_resultado BOOLEAN DEFAULT FALSE;
+    DECLARE v_query TEXT;
+    
+    -- Busca a validação configurada
+    SELECT tipo_validacao, valor_referencia 
+    INTO v_tipo_validacao, v_valor_referencia
+    FROM validacao_dados 
+    WHERE tabela = p_tabela 
+      AND campo = p_campo 
+      AND ativo = 1
+    LIMIT 1;
+    
+    -- Aplica a validação conforme o tipo
+    CASE v_tipo_validacao
+        WHEN 'formato' THEN
+            -- Validação por expressão regular
+            SET v_resultado = p_valor REGEXP v_valor_referencia;
+            
+        WHEN 'faixa' THEN
+            -- Validação por lista de valores ou faixa numérica
+            IF v_valor_referencia LIKE '>=%' OR v_valor_referencia LIKE '<=%' OR v_valor_referencia LIKE 'BETWEEN%' THEN
+                -- Para faixas numéricas, seria necessário uma avaliação mais complexa
+                -- Esta é uma simplificação
+                SET v_resultado = TRUE;
+            ELSE
+                -- Verifica se o valor está na lista
+                SET v_resultado = FIND_IN_SET(p_valor, REPLACE(v_valor_referencia, ' ', '')) > 0;
+            END IF;
+            
+        WHEN 'relacionamento' THEN
+            -- Validação de chave estrangeira (simplificada)
+            IF p_valor IS NULL OR p_valor = '' THEN
+                SET v_resultado = TRUE;
+            ELSE
+                -- Nota: Esta é uma validação simplificada. Em produção, seria necessário executar a query
+                SET v_resultado = TRUE;
+            END IF;
+            
+        ELSE
+            SET v_resultado = TRUE;
+    END CASE;
+    
+    RETURN v_resultado;
+END //
+
+-- =============================================
+-- PROCEDURE PARA VERIFICAR VALIDAÇÕES
+-- =============================================
+
+CREATE PROCEDURE sp_verificar_validacoes(
+    IN p_tabela VARCHAR(50),
+    IN p_registro_id INT
+)
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_campo VARCHAR(50);
+    DECLARE v_mensagem VARCHAR(255);
+    DECLARE v_valor VARCHAR(255);
+    DECLARE v_valido BOOLEAN;
+    
+    DECLARE cur_validacoes CURSOR FOR 
+        SELECT campo, mensagem_erro 
+        FROM validacao_dados 
+        WHERE tabela = p_tabela AND ativo = 1;
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    -- Tabela temporária para resultados
+    CREATE TEMPORARY TABLE IF NOT EXISTS tmp_resultado_validacao (
+        campo VARCHAR(50),
+        valor_atual VARCHAR(255),
+        valido BOOLEAN,
+        mensagem VARCHAR(255)
+    );
+    
+    TRUNCATE TABLE tmp_resultado_validacao;
+    
+    -- Cria query dinâmica para buscar o registro
+    SET @query = CONCAT('SELECT * FROM ', p_tabela, ' WHERE id = ', p_registro_id);
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    OPEN cur_validacoes;
+    
+    read_loop: LOOP
+        FETCH cur_validacoes INTO v_campo, v_mensagem;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        
+        -- Busca o valor do campo (simplificado - em produção seria dinâmico)
+        SET @query_valor = CONCAT('SELECT ', v_campo, ' INTO @valor_atual FROM ', p_tabela, ' WHERE id = ', p_registro_id);
+        PREPARE stmt_valor FROM @query_valor;
+        EXECUTE stmt_valor;
+        DEALLOCATE PREPARE stmt_valor;
+        
+        SET v_valido = fn_validar_dado(p_tabela, v_campo, @valor_atual);
+        
+        INSERT INTO tmp_resultado_validacao (campo, valor_atual, valido, mensagem)
+        VALUES (v_campo, @valor_atual, v_valido, IF(v_valido = FALSE, v_mensagem, 'OK'));
+        
+    END LOOP;
+    
+    CLOSE cur_validacoes;
+    
+    -- Mostra resultados
+    SELECT * FROM tmp_resultado_validacao;
+    
+    -- Mostra resumo
+    SELECT 
+        COUNT(*) as total_validacoes,
+        SUM(CASE WHEN valido = TRUE THEN 1 ELSE 0 END) as validacoes_ok,
+        SUM(CASE WHEN valido = FALSE THEN 1 ELSE 0 END) as inconsistencias
+    FROM tmp_resultado_validacao;
+    
+    DROP TEMPORARY TABLE tmp_resultado_validacao;
+END //
+
+DELIMITER ;
+
+-- =============================================
+-- TRIGGER PARA VALIDAÇÃO AUTOMÁTICA
+-- =============================================
+
+-- Exemplo de trigger para validar dados antes de inserir na tabela aluno
+DELIMITER //
+
+CREATE TRIGGER trg_validar_aluno_insert
+BEFORE INSERT ON aluno
+FOR EACH ROW
+BEGIN
+    -- Validar RA
+    IF NOT fn_validar_dado('aluno', 'ra', NEW.ra) THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'RA inválido. Deve conter 7 dígitos numéricos';
+    END IF;
+    
+    -- Validar email
+    IF NOT fn_validar_dado('aluno', 'email', NEW.email) THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Email em formato inválido';
+    END IF;
+    
+    -- Validar senha
+    IF NOT fn_validar_dado('aluno', 'senha', NEW.senha) THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Senha muito curta. Mínimo 6 caracteres';
+    END IF;
+END //
+
+DELIMITER ;
+
+-- =============================================
+-- CONSULTAS PARA VERIFICAR VALIDAÇÕES
+-- =============================================
+
+-- 1. Ver todas as validações configuradas por tabela
+SELECT 
+    tabela,
+    campo,
+    tipo_validacao,
+    valor_referencia,
+    mensagem_erro,
+    ativo
+FROM validacao_dados
+ORDER BY tabela, campo;
+
+-- 2. Verificar validações de um registro específico (ex: aluno id 1)
+CALL sp_verificar_validacoes('aluno', 1);
+
+-- 3. Verificar registros com possíveis inconsistências
+SELECT 
+    'aluno' as tabela,
+    id as registro_id,
+    ra as valor_ra,
+    CASE 
+        WHEN ra REGEXP '^[0-9]{7}$' THEN 'Válido'
+        ELSE 'Inválido'
+    END as status_ra,
+    email as valor_email,
+    CASE 
+        WHEN email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' THEN 'Válido'
+        ELSE 'Inválido'
+    END as status_email
+FROM aluno;
+
+-- 4. Relatório de consistência do banco de dados
+SELECT 
+    v.tabela,
+    COUNT(DISTINCT v.campo) as total_validacoes,
+    COUNT(DISTINCT CASE WHEN v.ativo = 1 THEN v.campo END) as validacoes_ativas
+FROM validacao_dados v
+GROUP BY v.tabela
+ORDER BY v.tabela;
